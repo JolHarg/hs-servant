@@ -5,10 +5,10 @@
 
 module Types.API.TH where
 
-import           Data.Model
-import           Data.Text
-import           Language.Haskell.TH
-import           Servant.API
+import Data.Model
+import Data.Text
+import Language.Haskell.TH
+import Servant.API
 
 (<||>) ∷ Type → Type → Type
 (<||>) = AppT

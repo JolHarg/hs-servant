@@ -39,7 +39,6 @@ library
                       -Wno-missing-local-signatures
                       -Wno-missing-safe-haskell-mode
                       -Wno-missing-kind-signatures
-                      -Wno-prepositive-qualified-module
 
 
 test-suite jolharg-servant-test
@@ -66,7 +65,6 @@ test-suite jolharg-servant-test
                       -Wno-missing-local-signatures
                       -Wno-missing-safe-haskell-mode
                       -Wno-missing-kind-signatures
-                      -Wno-prepositive-qualified-module
   build-depends:
     base >= 4.12 && < 5
     -- , jolharg-servant
