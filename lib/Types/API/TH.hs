@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE Unsafe                #-}
+{- HLINT ignore "Use alternative" -}
 
 module Types.API.TH where
 
