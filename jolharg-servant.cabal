@@ -19,7 +19,7 @@ library
   build-depends:
     , base              ^>=4.21.0.0
     , jolharg-models    ^>=0.2.0.0
-    , servant           ^>=0.20.2
+    , servant           ^>=0.20.3.0
     , template-haskell  ^>=2.23.0
     , text              ^>=2.1.2
 
