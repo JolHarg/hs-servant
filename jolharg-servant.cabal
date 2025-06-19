@@ -25,10 +25,8 @@ library
 
   -- for ghc 9.10.1
   hs-source-dirs:     lib
-  default-language:   Haskell2010
+  default-language:   GHC2024
   default-extensions:
-    DerivingStrategies
-    ImportQualifiedPost
     NoGeneralisedNewtypeDeriving
     OverloadedStrings
     UnicodeSyntax
@@ -49,11 +47,9 @@ test-suite jolharg-servant-test
     buildable: False
   hs-source-dirs:     test
   type:               exitcode-stdio-1.0
-  default-language:   Haskell2010
+  default-language:   GHC2024
   default-extensions:
-    DerivingStrategies
     ImportQualifiedPost
-    NoGeneralisedNewtypeDeriving
     OverloadedStrings
     UnicodeSyntax
   main-is:            Spec.hs
@@ -77,6 +73,6 @@ test-suite jolharg-servant-test
   -- , hspec-core ^>=2.11.10
   -- , hspec-expectations ^>=0.8.4
   -- , HUnit
-  -- , QuickCheck ^>=2.15.0.1
+  -- , QuickCheck ^>=2.16.0.0
   build-tool-depends: hspec-discover:hspec-discover
   other-modules:      MainSpec
