@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 {-# LANGUAGE Unsafe                #-}
 
@@ -6,14 +5,15 @@ module Types.API.TH where
 
 import Data.Model
 import Data.Text
+import GHC.Generics (Generic)
 import Language.Haskell.TH
 import Servant.API
 
 
 defineGetPluralType ∷ Model → DecsQ
-defineGetPluralType Model { modelName, pluralModelName } = do
-    let modelType   = mkName modelName
-    let getPluralAPI   = mkName $ "Get" <> pluralModelName <> "API"
+defineGetPluralType Model { singularType, pluralType } = do
+    let modelType   = mkName singularType
+    let getPluralAPI   = mkName $ "Get" <> pluralType <> "API"
     pure [
         TySynD getPluralAPI [] (
             AppT (
@@ -37,9 +37,9 @@ defineGetPluralType Model { modelName, pluralModelName } = do
 
 
 defineGetType ∷ Model → DecsQ
-defineGetType Model { modelName } = do
-    let modelType   = mkName modelName
-    let getAPI      = mkName $ "Get" <> modelName <> "API"
+defineGetType Model { singularType } = do
+    let modelType   = mkName singularType
+    let getAPI      = mkName $ "Get" <> singularType <> "API"
     pure [
         TySynD getAPI [] (
             AppT (
@@ -60,10 +60,10 @@ defineGetType Model { modelName } = do
         ]
 
 defineGetIdType ∷ Model → DecsQ
-defineGetIdType Model { modelName } = do
-    let modelType   = mkName modelName
-    let modelId     = mkName $ modelName <> "Id"
-    let getIdAPI      = mkName $ "Get" <> modelName <> "IdAPI"
+defineGetIdType Model { singularType } = do
+    let modelType   = mkName singularType
+    let modelId     = mkName $ singularType <> "Id"
+    let getIdAPI      = mkName $ "Get" <> singularType <> "IdAPI"
     pure [
         TySynD getIdAPI [] (
             AppT (
@@ -101,8 +101,8 @@ defineGetIdType Model { modelName } = do
         ]
 
 defineDeleteType ∷ Model → DecsQ
-defineDeleteType Model { modelName } = do
-    let deleteAPI   = mkName $ "Delete" <> modelName <> "API"
+defineDeleteType Model { singularType } = do
+    let deleteAPI   = mkName $ "Delete" <> singularType <> "API"
     pure [
         -- https://github.com/haskell-servant/servant-auth/issues/177
         TySynD deleteAPI [] (
@@ -123,9 +123,9 @@ defineDeleteType Model { modelName } = do
         ]
 
 defineDeleteIdType ∷ Model → DecsQ
-defineDeleteIdType Model { modelName } = do
-    let modelId     = mkName $ "Delete" <> modelName <> "Id"
-    let deleteIdAPI   = mkName $ "Delete" <> modelName <> "IdAPI"
+defineDeleteIdType Model { singularType } = do
+    let modelId     = mkName $ "Delete" <> singularType <> "Id"
+    let deleteIdAPI   = mkName $ "Delete" <> singularType <> "IdAPI"
     pure [
         -- https://github.com/haskell-servant/servant-auth/issues/177
         TySynD deleteIdAPI [] (
@@ -164,10 +164,10 @@ defineDeleteIdType Model { modelName } = do
         ]
 
 definePutType ∷ Model → DecsQ
-definePutType Model { modelName } = do
-    let retrieveModelType   = mkName modelName
-    let updateModelType   = mkName ("Update" <> modelName)
-    let putAPI      = mkName $ "Put" <> modelName <> "API"
+definePutType Model { singularType } = do
+    let retrieveModelType   = mkName singularType
+    let updateModelType   = mkName ("Update" <> singularType)
+    let putAPI      = mkName $ "Put" <> singularType <> "API"
     pure [
         TySynD putAPI [] (
             AppT (
@@ -207,11 +207,11 @@ definePutType Model { modelName } = do
         ]
 
 definePutIdType ∷ Model → DecsQ
-definePutIdType Model { modelName } = do
-    let retrieveModelType   = mkName modelName
-    let updateModelType   = mkName ("Update" <> modelName)
-    let modelId     = mkName $ "Update" <> modelName <> "Id"
-    let putIdAPI      = mkName $ "Put" <> modelName <> "IdAPI"
+definePutIdType Model { singularType } = do
+    let retrieveModelType   = mkName singularType
+    let updateModelType   = mkName ("Update" <> singularType)
+    let modelId     = mkName $ "Update" <> singularType <> "Id"
+    let putIdAPI      = mkName $ "Put" <> singularType <> "IdAPI"
     pure [
         TySynD putIdAPI [] (
             AppT (
@@ -269,10 +269,10 @@ definePutIdType Model { modelName } = do
         ]
 
 definePostType ∷ Model → DecsQ
-definePostType Model { modelName } = do
-    let createModelType   = mkName ("Create" <> modelName)
-    let retrieveModelType   = mkName modelName
-    let postAPI     = mkName $ "Post" <> modelName <> "API"
+definePostType Model { singularType } = do
+    let createModelType   = mkName ("Create" <> singularType)
+    let retrieveModelType   = mkName singularType
+    let postAPI     = mkName $ "Post" <> singularType <> "API"
     pure [
         TySynD postAPI [] (
             AppT (
@@ -331,19 +331,19 @@ defineRESTCRUDTypesSelf model = do
         putType
 
 defineRESTTypes ∷ Model → DecsQ
-defineRESTTypes model@Model { pluralEndpoint, modelName, pluralModelName } = do
-    let getPlural    = mkName $ "get" <> pluralModelName
-    let getPluralAPI   = mkName $ "Get" <> pluralModelName <> "API"
-    let getId          = mkName $ "get" <> modelName
-    let getIdAPI      = mkName $ "Get" <> modelName <> "IdAPI"
-    let deleteId = mkName $ "delete" <> modelName <> "Id"
-    let deleteIdAPI   = mkName $ "Delete" <> modelName <> "IdAPI"
-    let putId      = mkName $ "put" <> modelName <> "Id"
-    let putIdAPI      = mkName $ "Put" <> modelName <> "IdAPI"
-    let post     = mkName $ "post" <> modelName
-    let postAPI     = mkName $ "Post" <> modelName <> "API"
-    let namedAPI = mkName $ pluralModelName <> "NamedAPI"
-    let api         = mkName $ pluralModelName <> "API"
+defineRESTTypes model@Model { pluralEndpoint, singularType, pluralType } = do
+    let getPlural    = mkName $ "get" <> pluralType
+    let getPluralAPI   = mkName $ "Get" <> pluralType <> "API"
+    let getId          = mkName $ "get" <> singularType
+    let getIdAPI      = mkName $ "Get" <> singularType <> "IdAPI"
+    let deleteId = mkName $ "delete" <> singularType <> "Id"
+    let deleteIdAPI   = mkName $ "Delete" <> singularType <> "IdAPI"
+    let putId      = mkName $ "put" <> singularType <> "Id"
+    let putIdAPI      = mkName $ "Put" <> singularType <> "IdAPI"
+    let post     = mkName $ "post" <> singularType
+    let postAPI     = mkName $ "Post" <> singularType <> "API"
+    let namedAPI = mkName $ pluralType <> "NamedAPI"
+    let api         = mkName $ pluralType <> "API"
     let mode = mkName "mode"
     crud <- defineRESTCRUDTypes model
     pure $ crud <> [
@@ -417,7 +417,9 @@ defineRESTTypes model@Model { pluralEndpoint, modelName, pluralModelName } = do
                         )
                     )
                     ]
-                ] [],
+                ] [
+                    DerivClause (Just StockStrategy) [ConT ''Generic]
+                ],
         TySynD api [] (
             AppT (
                 AppT (
@@ -438,15 +440,15 @@ defineRESTTypes model@Model { pluralEndpoint, modelName, pluralModelName } = do
         ]
 
 defineRESTTypesSelf ∷ Model → DecsQ
-defineRESTTypesSelf model@Model { endpoint, modelName } = do
-    let get = mkName $ "get" <> modelName
-    let getAPI   = mkName $ "Get" <> modelName <> "API"
-    let delete = mkName $ "delete" <> modelName
-    let deleteAPI   = mkName $ "Delete" <> modelName <> "API"
-    let put = mkName $ "put" <> modelName
-    let putAPI      = mkName $ "Put" <> modelName <> "API"
-    let namedAPI = mkName $ modelName <> "NamedAPI"
-    let api         = mkName $ modelName <> "API"
+defineRESTTypesSelf model@Model { singularEndpoint, singularType } = do
+    let get = mkName $ "get" <> singularType
+    let getAPI   = mkName $ "Get" <> singularType <> "API"
+    let delete = mkName $ "delete" <> singularType
+    let deleteAPI   = mkName $ "Delete" <> singularType <> "API"
+    let put = mkName $ "put" <> singularType
+    let putAPI      = mkName $ "Put" <> singularType <> "API"
+    let namedAPI = mkName $ singularType <> "NamedAPI"
+    let api         = mkName $ singularType <> "API"
     let mode = mkName "mode"
     crud <- defineRESTCRUDTypesSelf model
     pure $ crud <> [
@@ -494,14 +496,16 @@ defineRESTTypesSelf model@Model { endpoint, modelName } = do
                         )
                     )
                     ]
-                ] [],
+                ] [
+                    DerivClause (Just StockStrategy) [ConT ''Generic]
+                ],
         TySynD api [] (
             AppT (
                 AppT (
                     ConT ''(:>)
                 ) (
                     LitT (
-                        StrTyLit endpoint
+                        StrTyLit singularEndpoint
                     )
                 )
             ) (
@@ -514,14 +518,15 @@ defineRESTTypesSelf model@Model { endpoint, modelName } = do
         )
         ]
 
+-- let's discover what we should include so we shouldn't need to decide if it's readresttypes or whatever
 defineReadRESTTypes ∷ Model → DecsQ
-defineReadRESTTypes model@Model { pluralEndpoint, modelName, pluralModelName } = do
-    let getPlural = mkName $ "get" <> pluralModelName
-    let getPluralAPI   = mkName $ "Get" <> pluralModelName <> "API"
-    let getId = mkName $ "get" <> modelName
-    let getIdAPI      = mkName $ "Get" <> modelName <> "IdAPI"
-    let api         = mkName $ "Public" <> pluralModelName <> "API"
-    let namedAPI = mkName $ "Public" <> pluralModelName <> "NamedAPI"
+defineReadRESTTypes model@Model { pluralEndpoint, singularType, pluralType } = do
+    let getPlural = mkName $ "get" <> pluralType
+    let getPluralAPI   = mkName $ "Get" <> pluralType <> "API"
+    let getId = mkName $ "get" <> singularType
+    let getIdAPI      = mkName $ "Get" <> singularType <> "IdAPI"
+    let api         = mkName $ "Public" <> pluralType <> "API"
+    let namedAPI = mkName $ "Public" <> pluralType <> "NamedAPI"
     let mode = mkName "mode"
     getType <- defineGetPluralType model
     getIdType <- defineGetIdType model
@@ -557,7 +562,9 @@ defineReadRESTTypes model@Model { pluralEndpoint, modelName, pluralModelName } =
                         )
                     )
                     ]
-                ] [],
+                ] [
+                    DerivClause (Just StockStrategy) [ConT ''Generic]
+                ],
         TySynD api [] (
             AppT (
                 AppT (
