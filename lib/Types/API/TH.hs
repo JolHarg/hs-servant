@@ -9,27 +9,52 @@ import GHC.Generics (Generic)
 import Language.Haskell.TH
 import Servant.API
 
+addExtraQSParams :: [String] -> Type -> Type
+addExtraQSParams [] exp' = exp'
+addExtraQSParams (a:as) exp' = addExtraQSParams as . addExtraQSParam a $ exp'
+
+addExtraQSParam :: String -> Type -> Type
+addExtraQSParam named = AppT (
+        AppT (
+            ConT ''(:>)
+        ) (
+            AppT (
+                AppT (
+                    ConT ''QueryParam
+                ) (
+                    LitT (
+                        StrTyLit named
+                    )
+                )
+            ) (
+                ConT ''Text
+            )
+        )
+    )
 
 defineGetPluralType ∷ Model → DecsQ
-defineGetPluralType Model { singularType, pluralType } = do
+defineGetPluralType model@Model { singularType, pluralType } = do
     let modelType   = mkName singularType
     let getPluralAPI   = mkName $ "Get" <> pluralType <> "API"
     pure [
         TySynD getPluralAPI [] (
-            AppT (
+            -- in here with app the field
+            addExtraQSParams (getFilterableFieldNames model) (
                 AppT (
-                    ConT ''Get
-                ) (
                     AppT (
-                        AppT PromotedConsT (
-                            ConT ''JSON
+                        ConT ''Get
+                    ) (
+                        AppT ( 
+                            AppT PromotedConsT (
+                                ConT ''JSON
+                            )
                         )
+                        PromotedNilT
                     )
-                    PromotedNilT
-                )
-            ) (
-                AppT ListT (
-                    ConT modelType
+                ) (
+                    AppT ListT (
+                        ConT modelType
+                    )
                 )
             )
         )
@@ -294,6 +319,7 @@ definePostType Model { singularType } = do
                     )
                 )
             ) (
+                -- TODO: :> PostCreated '[JSON] a -> UVerb 'POST '[JSON] [WithStatus 200 a, WithStatus 201 a]
                 AppT (
                     AppT (
                         ConT ''PostCreated
@@ -521,6 +547,72 @@ defineRESTTypesSelf model@Model { singularEndpoint, singularType } = do
 -- let's discover what we should include so we shouldn't need to decide if it's readresttypes or whatever
 defineReadRESTTypes ∷ Model → DecsQ
 defineReadRESTTypes model@Model { pluralEndpoint, singularType, pluralType } = do
+    let getPlural = mkName $ "get" <> pluralType
+    let getPluralAPI   = mkName $ "Get" <> pluralType <> "API"
+    let getId = mkName $ "get" <> singularType
+    let getIdAPI      = mkName $ "Get" <> singularType <> "IdAPI"
+    let api         = mkName $ pluralType <> "API"
+    let namedAPI = mkName $ pluralType <> "NamedAPI"
+    let mode = mkName "mode"
+    getType <- defineGetPluralType model
+    getIdType <- defineGetIdType model
+    pure $ getType <> getIdType <> [
+        DataD [] namedAPI [
+            PlainTV mode BndrReq
+            ] Nothing [
+                RecC namedAPI [
+                    (
+                        getPlural,
+                        Bang NoSourceUnpackedness NoSourceStrictness,
+                        AppT (
+                            AppT (
+                                ConT ''(:-)
+                            ) (
+                                VarT mode
+                            )
+                        ) (
+                            ConT getPluralAPI
+                        )
+                    ),
+                    (
+                        getId,
+                        Bang NoSourceUnpackedness NoSourceStrictness,
+                        AppT (
+                            AppT (
+                                ConT ''(:-)
+                            ) (
+                                VarT mode
+                            )
+                        ) (
+                            ConT getIdAPI
+                        )
+                    )
+                    ]
+                ] [
+                    DerivClause (Just StockStrategy) [ConT ''Generic]
+                ],
+        TySynD api [] (
+            AppT (
+                AppT (
+                    ConT ''(:>)
+                ) (
+                    LitT (
+                        StrTyLit pluralEndpoint
+                    )
+                )
+            ) (
+                AppT (
+                    ConT ''NamedRoutes
+                ) (
+                    ConT namedAPI
+                )
+            )
+        )
+        ]
+
+-- let's discover what we should include so we shouldn't need to decide if it's readresttypes or whatever
+definePublicReadRESTTypes ∷ Model → DecsQ
+definePublicReadRESTTypes model@Model { pluralEndpoint, singularType, pluralType } = do
     let getPlural = mkName $ "get" <> pluralType
     let getPluralAPI   = mkName $ "Get" <> pluralType <> "API"
     let getId = mkName $ "get" <> singularType
